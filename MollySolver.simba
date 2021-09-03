@@ -1,0 +1,255 @@
+program R_MollySolve;
+{$DEFINE SMART8}
+{$I SRL-OSR/SRL.Simba}
+{$I SRL-OSR/SRL/misc/al_functions.simba}
+{$I SRL-OSR/SRL/Reflection/Reflection.simba}
+
+VAR
+  Molly: TNPC;
+  Fakes:  array of TNPC;
+  StartArea, RandomArea: TBox;
+  PlayerLoc, CraneLoc, DoorLoc, mousetile: TPoint;
+  i: Integer;
+  Twin,t: TNPC;
+
+Function InMollyRoom: Boolean;
+begin
+  if (R_FindNPC('Molly', Molly)) then
+  begin
+    writeln('found molly: ' + inttostr(Molly.NPCId));
+    Result := true;
+  end;
+end;
+
+Procedure WalkOutDoor;
+var DoorLoc, Coord: TPoint;
+
+begin
+   DoorLoc := Point((R_GetTileGlobal.x + 2), R_GetTileGlobal.y);
+   R_OpenDoor(DoorLoc, 'E');
+   repeat
+      wait(100);
+   until(FindNPCChatText('Molly', Nothing));
+   clicktoContinue;
+   ChatWait;
+   ChatWait;
+   if FindNPCChatText('Select', Nothing) then
+   begin
+    FindNPCChatText('know', ClickLeft);
+    ChatWait;
+    ChatWait;
+    ClickToContinue;
+    ChatWait;
+    ChatWait;
+    ClickToContinue;
+    wait(2000);
+   end;
+end;
+
+Function GoToControls: Boolean;
+var ControlBoxLoc, BoxCoords: TPoint;
+begin
+  MakeCompass('E');
+   ControlBoxLoc := Point((R_getTileGlobal.x + 5), (R_getTileGlobal.y - 2));
+   BoxCoords := R_TileToMS(ControlBoxLoc);
+   MMouse(BoxCoords.x, BoxCoords.y, 3, 3);
+   wait(200+random(200));
+   if (IsUpText('panel')) then
+   begin
+    clickmouse2(Mouse_left);
+   end;
+end;
+
+Function OnControls: Boolean;
+var x, y: Integer;
+begin
+  result := findcolortolerance(x,y,39423,665,212,723,257,1);
+end;
+
+Function findEvilTwin: TNPC;
+var tempTNPCArray: TNPCArray;
+    tmp: TNPC;
+    i, loc, lowestID: integer;
+begin
+   tempTNPCArray := R_GetAllNPCs;
+    lowestID := 10000000;
+   for i := 0 to high(tempTNPCArray) do
+   begin
+     if (tempTNPCArray[i].Index < lowestID) then
+     begin
+       lowestId := tempTNPCArray[i].index;
+       loc := i;
+     end;
+   end;
+   result := tempTNPCArray[loc];
+
+end;
+
+Procedure ControlArm(dir: String; var Coord: Tpoint);
+begin
+  case dir of
+      'u': begin
+              Mouse(640, 290, 1, 1, Mouse_left);
+              dec(Coord.y);
+              wait(300+random(500))
+           end;
+      'd': begin
+              Mouse(639, 385, 1, 1, Mouse_left);
+              inc(Coord.y);
+              wait(300+random(500))
+           end;
+      'l': begin
+              Mouse(593, 333, 1, 1, Mouse_left);
+              inc(Coord.x);
+              wait(300+random(500))
+           end;
+      'r': begin
+              Mouse(693, 330, 1, 1, Mouse_left);
+              dec(Coord.x);
+              wait(300+random(500))
+           end;
+   end;
+end;
+
+Function overFake: boolean;
+begin
+  R_FindNPC(t.NPCID, Twin);
+  Result:= ((CraneLoc.x = Twin.Tile.x) and (CraneLoc.y = Twin.Tile.y))
+end;
+
+
+Function GoUp:Boolean;
+begin
+  R_FindNPC(t.NPCID, Twin);
+  Result := (CraneLoc.y > Twin.tile.y);
+end;
+
+Function GoDown: Boolean;
+begin
+  R_FindNPC(t.NPCID, Twin);
+  Result := (CraneLoc.y < Twin.tile.y);
+end;
+
+Function GoRight: Boolean;
+begin
+  R_FindNPC(t.NPCID, Twin);
+  Result := (CraneLoc.x > Twin.tile.x);
+end;
+
+Function GoLeft: Boolean;
+begin
+  R_FindNPC(t.NPCID, Twin);
+  Result := (CraneLoc.x < Twin.tile.x);
+end;
+
+Function WaitForControl:boolean;
+begin
+  repeat
+    wait(100);
+  until(GetColor(699, 234) =  39423)
+  result := true;
+end;
+
+
+Function CatchTheFake:Boolean;
+var xStart: Tpoint;
+    dir: String;
+    i, yDis, xDis:Integer;
+begin
+
+  CraneLoc.x := R_GetTileGlobal.x;
+  CraneLoc.y := R_GetTileGlobal.y - 4;
+  repeat
+    R_FindNPC(t.NPCID, Twin);
+    begin
+      if (overFake) then
+      begin
+        Mouse(699,423,2,2,Mouse_left);
+        continue;
+      end;
+      if GoUp then
+      begin
+      R_FindNPC(t.NPCID, Twin);
+        ControlArm('u',CraneLoc);
+        continue;
+      end;
+      if GoDown then
+      begin
+        R_FindNPC(t.NPCID, Twin);
+        ControlArm('d',CraneLoc);
+        continue;
+      end;
+      if GoLeft then
+      begin
+        R_FindNPC(t.NPCID, Twin);
+        ControlArm('l',CraneLoc);
+        continue;
+      end else
+      if GoRight then
+      begin
+        R_FindNPC(t.NPCID, Twin);
+        ControlArm('r',CraneLoc);
+        continue;
+      end;
+
+    end;
+  until(FindBlackChatMessage('Evil'));
+end;
+
+Procedure BackToDoor;
+begin
+  doorLoc.x:= R_GetTileGlobal.x - 5;
+  doorLoc.y:= R_GetTileGlobal.y + 1;
+  R_OpenDoor(doorLoc,'W');
+end;
+
+Procedure WaitTilInRoom;
+var PlayerLoc: TPoint;
+begin
+  repeat
+    wait(100);
+  until(R_FindNPC('Molly',Molly));
+  PlayerLoc := R_TileToMS(Molly.Tile)
+  Mouse(playerLoc.x, PlayerLoc.Y, 1, 1, Mouse_Left);
+end;
+
+begin
+  SetupSRL;
+  SetupReflection;
+  ActivateClient;
+  if InMollyRoom then
+  begin
+    MakeCompass('N');
+    WalkOutDoor;
+    GoToControls;
+    WaitForControl;
+    t:= findEvilTwin;
+    CatchTheFake;
+    repeat
+      wait(100);
+    until(FindNPCCHatText('Molly',nothing));
+    ClickToContinue;
+    ChatWait;
+    ClickToContinue;
+    makeCompass('w');
+    doorLoc.x:= R_GetTileGlobal.x - 5;
+    doorLoc.y:= R_GetTileGlobal.y + 1;
+    mousetile := R_TileToMS(doorLoc);
+    Mouse(mouseTile.x, Mousetile.y, 1, 1, Mouse_left)
+    wait(4000);
+    R_OpenDoor(R_GetTileGlobal,'W');
+    waitTilInRoom;
+    wait(1000);
+    clicktoContinue;
+    ChatWait;
+    ChatWait;
+    ClickToContinue;
+    ChatWait;
+    ChatWait;
+    ClickToContinue;
+  end;
+
+
+
+
+end.

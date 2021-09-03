@@ -1,0 +1,38 @@
+{Function CalculateCombat(A,S,D,H,P,R,M: integer): extended; 
+ This will calculate your combat level as close as possible. A stands
+ for attack, S for strength, D for defence, H for hitpoints, P for
+ prayer, R for range, and M for mage.
+ By: jhildy
+ Uploaded to SRL forums on 09/16/2007
+{********************************************}
+Function CalculateCombat(A,S,D,H,P,R,M: integer): extended;
+var L: array [0..6] of extended;
+var Base,melee,range,mage: extended;
+begin
+  L[0]:=D*100;
+  L[1]:=H*100;
+  if p mod 2 = 0 then
+  l[2]:=P*50
+  else if p mod 2 <> 0 then
+  l[2]:=(p-1)*50;
+  Base:=(l[0]+l[1]+l[2])/400;
+  l[3]:=A*130;
+  l[4]:=s*130;
+  if r mod 2 = 0 then
+  l[5]:=r*195
+  else if r mod 2 <> 0 then
+  l[5]:= (((r-1)+(r*2))*65);
+  if m mod 2 = 0 then
+  l[6]:=m*195
+  else if m mod 2 <> 0 then
+  l[6]:=(((m-1)+(m*2))*65);
+  melee:=(l[3]+l[4])/400;
+  range:=l[5]/400;
+  mage:=l[6]/400;
+  if (melee > range) and (melee > mage) then
+  result:=melee+base
+  else if (range > melee) and (range > mage) then
+  result:=range+base
+  else if (mage > melee) and (mage > range) then
+  result:=mage+base
+end;
